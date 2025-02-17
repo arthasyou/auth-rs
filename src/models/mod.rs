@@ -1,7 +1,7 @@
 pub mod auth_model;
 
-use serde::{Deserialize, Serialize};
-use surrealdb::RecordId;
+use serde::Serialize;
+
 use utoipa::ToSchema;
 
 pub trait IntoCommonResponse {
@@ -51,9 +51,4 @@ impl Into<CommonError> for (u16, &str) {
             message: String::from(self.1),
         }
     }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Record {
-    pub id: RecordId,
 }
