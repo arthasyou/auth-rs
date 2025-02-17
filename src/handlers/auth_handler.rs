@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::Extension;
 use axum::{http::StatusCode, Json};
 use bcrypt::{hash, DEFAULT_COST};
@@ -5,9 +7,18 @@ use service_utils_rs::services::jwt::Jwt;
 
 use crate::database::auth_db;
 use crate::error::error_code;
-use crate::models::auth_model::{LoginRequest, LoginRespon, SignupRequest, User, UserInput};
+use crate::models::auth_model::{LoginRequest, LoginResponse, SignupRequest, User, UserInput};
 use crate::models::{CommonError, CommonResponse, IntoCommonResponse};
 
+#[utoipa::path(
+    post,
+    path = "/signup",
+    request_body = SignupRequest,
+    responses(
+        (status = 200, description = "User registered successfully", body = CommonResponse),
+        (status = 500, description = "Internal server error", body = CommonError)
+    )
+)]
 pub async fn signup(
     Json(payload): Json<SignupRequest>,
 ) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
@@ -26,7 +37,7 @@ pub async fn signup(
         password: hashed_password,
     };
 
-    auth_db::insert_user(user).await.map_err(|e| {
+    auth_db::create_user(user).await.map_err(|e| {
         eprintln!("Database query error: {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -39,21 +50,30 @@ pub async fn signup(
     Ok(Json(res))
 }
 
+#[utoipa::path(
+    post,
+    path = "/login",
+    request_body = LoginRequest,
+    responses(
+        (status = 200, description = "User registered successfully", body = LoginResponse),
+        (status = 500, description = "Internal server error", body = CommonError)
+    )
+)]
 pub async fn login(
-    Extension(jwt): Extension<Jwt>,
+    Extension(jwt): Extension<Arc<Jwt>>,
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
     let db_user = get_current_user(&payload.username).await?;
     verify_password(&payload.password, db_user.password.as_ref())?;
 
-    let user_id = db_user.id.clone().to_string();
+    let user_id = db_user.uuid.clone().to_string();
     let (accece, refleash) = jwt.generate_token_pair(user_id.clone()).map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(error_code::SERVER_ERROR.into()),
         )
     })?;
-    let data = LoginRespon {
+    let data = LoginResponse {
         access_token: accece,
         refresh: refleash,
     };
@@ -88,13 +108,16 @@ fn verify_password(password: &str, hash: &str) -> Result<bool, (StatusCode, Json
 }
 
 async fn is_username_taken(username: &str) -> Result<(), (StatusCode, Json<CommonError>)> {
-    let existing_user = auth_db::get_user(username).await.map_err(|_| {
+    let existing_user = auth_db::get_user(username).await.map_err(|e| {
+        eprintln!("Database query error: {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(error_code::SERVER_ERROR.into()),
         )
     })?;
+    println!("existing: {:?}", existing_user);
     match existing_user {
+        // Some(_) => Ok(()),
         Some(_) => Err((StatusCode::BAD_REQUEST, Json(error_code::USER_EXIST.into()))),
         None => Ok(()),
     }

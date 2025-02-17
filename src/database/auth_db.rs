@@ -1,43 +1,58 @@
+use axum::extract::Query;
 use service_utils_rs::services::db::get_db;
 
 use crate::error::Result;
 use crate::models::auth_model::{User, UserInput};
+use crate::models::Record;
 
 pub async fn create_users_table() -> Result<()> {
+    let query = "
+        DEFINE TABLE IF NOT EXISTS user SCHEMALESS PERMISSIONS FULL;
+    
+        DEFINE FIELD IF NOT EXISTS username ON TABLE user TYPE string;
+        DEFINE FIELD IF NOT EXISTS password ON TABLE user TYPE string;
+        DEFINE FIELD IF NOT EXISTS uuid ON TABLE user TYPE string;
+  
+        DEFINE INDEX IF NOT EXISTS unique_uuid ON TABLE user FIELDS uuid UNIQUE;
+        DEFINE INDEX IF NOT EXISTS unique_username ON TABLE user FIELDS username UNIQUE;
+       ";
+
     let db = get_db();
-
-    // 检查表是否存在
-    let check_query = "SHOW TABLES";
-    let result: Vec<String> = db.query(check_query).await?.take(0)?;
-
-    // 检查返回的表名是否包含 "users"
-    let tables: Vec<String> = result.iter().map(|row| row.to_string()).collect(); // 假设返回的是表名列表
-    if !tables.contains(&"users".to_string()) {
-        // 如果表不存在，则创建表
-        let create_query = "CREATE TABLE users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name STRING,
-            email STRING
-        );";
-        let r = db.query(create_query).await?;
-        println!("Created users table: {:?}", r);
-    } else {
-        println!("Users table already exists");
-    }
+    db.query(query).await?;
 
     Ok(())
 }
 
-pub async fn insert_user(user: UserInput) -> Result<()> {
+pub async fn create_user(input: UserInput) -> Result<()> {
+    let uuid: String = uuid::Uuid::new_v4().to_string();
+    let user = User {
+        uuid,
+        username: input.username,
+        password: input.password,
+    };
     let db = get_db();
-    let r: Option<User> = db.insert(("users", &user.username)).content(user).await?;
-    println!("inserted user: {:?}", r);
+    let r: Option<User> = db.create(("user", &user.username)).content(user).await?;
+    println!("create user: {:?}", r);
     Ok(())
 }
 
 pub async fn get_user(username: &str) -> Result<Option<User>> {
+    let query = "
+        SELECT * FROM user WHERE username = test22t;
+       ";
     let db = get_db();
-    let r: Option<User> = db.select(("users", username)).await?;
+    // let r = db.query(query).await?;
+    // println!("get user: {:?}", r);
+
+    let r: Vec<User> = db.select("user").await?;
+    println!("get user===============: {:?}", r);
+
+    let r: Option<User> = db
+        .select(("user", "f4486b9c-6661-4628-9018-2586ab1cd63e"))
+        .await?;
+    println!("get user: {:?}", r);
+
+    let r: Option<User> = db.select(("user", username)).await?;
     println!("get user: {:?}", r);
     Ok(r)
 }
