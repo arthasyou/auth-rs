@@ -28,7 +28,7 @@ pub async fn signup(
     let hashed_password = hash(&payload.password, DEFAULT_COST).map_err(|_e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(error_code::SERVER_ERROR.into()),
+            Json(error_code::PASSWORD_ERROR.into()),
         )
     })?;
 
@@ -64,7 +64,13 @@ pub async fn login(
     Json(payload): Json<LoginRequest>,
 ) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
     let db_user = get_current_user(&payload.username).await?;
-    verify_password(&payload.password, db_user.password.as_ref())?;
+    let is_valid = verify_password(&payload.password, db_user.password.as_ref())?;
+    if !is_valid {
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(error_code::SERVER_ERROR.into()),
+        ));
+    }
 
     let user_id = db_user.uuid.clone().to_string();
     let (accece, refleash) = jwt.generate_token_pair(user_id.clone()).map_err(|_| {

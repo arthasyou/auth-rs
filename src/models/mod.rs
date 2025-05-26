@@ -40,11 +40,11 @@ impl Default for CommonResponse {
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct CommonError {
-    pub code: u16,
+    pub code: i16,
     pub message: String,
 }
 
-impl Into<CommonError> for (u16, &str) {
+impl Into<CommonError> for (i16, &str) {
     fn into(self) -> CommonError {
         CommonError {
             code: self.0,
