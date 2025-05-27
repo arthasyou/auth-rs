@@ -1,7 +1,8 @@
 pub mod auth_db;
 
-use crate::error::Result;
 use auth_db::create_users_table;
+
+use crate::error::Result;
 
 pub async fn create_tables() -> Result<()> {
     create_users_table().await?;

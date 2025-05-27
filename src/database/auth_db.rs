@@ -1,7 +1,9 @@
 use service_utils_rs::services::db::get_db;
 
-use crate::error::Result;
-use crate::models::auth_model::{User, UserInput};
+use crate::{
+    error::Result,
+    models::auth_model::{User, UserInput},
+};
 
 pub async fn create_users_table() -> Result<()> {
     let query = "

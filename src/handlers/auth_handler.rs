@@ -1,27 +1,31 @@
 use std::sync::Arc;
 
-use axum::Extension;
-use axum::{http::StatusCode, Json};
+use axum::{http::StatusCode, Extension, Json};
 use bcrypt::{hash, DEFAULT_COST};
-use service_utils_rs::services::jwt::Jwt;
+use service_utils_rs::services::{
+    http::{
+        response::{CommonOk, Empty, ResponseResult, Result},
+        CommonError, CommonResponse, IntoCommonResponse,
+    },
+    jwt::Jwt,
+};
 
-use crate::database::auth_db;
-use crate::error::error_code;
-use crate::models::auth_model::{LoginRequest, LoginResponse, SignupRequest, User, UserInput};
-use crate::models::{CommonError, CommonResponse, IntoCommonResponse};
+use crate::{
+    database::auth_db,
+    error::error_code,
+    models::auth_model::{LoginRequest, LoginResponse, SignupRequest, User, UserInput},
+};
 
 #[utoipa::path(
     post,
     path = "/signup",
     request_body = SignupRequest,
     responses(
-        (status = 200, description = "User registered successfully", body = CommonResponse),
+        (status = 200, description = "User registered successfully", body = CommonResponse<Empty>),
         (status = 500, description = "Internal server error", body = CommonError)
     )
 )]
-pub async fn signup(
-    Json(payload): Json<SignupRequest>,
-) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
+pub async fn signup(Json(payload): Json<SignupRequest>) -> ResponseResult<Empty> {
     // 检查用户名是否已存在
     is_username_taken(&payload.username).await?;
     // 哈希密码
@@ -45,9 +49,8 @@ pub async fn signup(
         )
     })?;
 
-    let mut res = CommonResponse::default();
-    res.message = "User registered successfully".to_string();
-    Ok(Json(res))
+    let res = CommonOk::default().to_json();
+    Ok(res)
 }
 
 #[utoipa::path(
@@ -62,7 +65,7 @@ pub async fn signup(
 pub async fn login(
     Extension(jwt): Extension<Arc<Jwt>>,
     Json(payload): Json<LoginRequest>,
-) -> Result<Json<CommonResponse>, (StatusCode, Json<CommonError>)> {
+) -> ResponseResult<LoginResponse> {
     let db_user = get_current_user(&payload.username).await?;
     let is_valid = verify_password(&payload.password, db_user.password.as_ref())?;
     if !is_valid {
@@ -84,11 +87,11 @@ pub async fn login(
         refresh: refleash,
     };
 
-    let res = data.into_common_response_data();
-    Ok(Json(res))
+    let res = data.into_common_response().to_json();
+    Ok(res)
 }
 
-async fn get_current_user(username: &str) -> Result<User, (StatusCode, Json<CommonError>)> {
+async fn get_current_user(username: &str) -> Result<User> {
     let existing_user = auth_db::get_user(username).await.map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -104,7 +107,7 @@ async fn get_current_user(username: &str) -> Result<User, (StatusCode, Json<Comm
     }
 }
 
-fn verify_password(password: &str, hash: &str) -> Result<bool, (StatusCode, Json<CommonError>)> {
+fn verify_password(password: &str, hash: &str) -> Result<bool> {
     bcrypt::verify(password, hash).map_err(|_err| {
         (
             StatusCode::UNAUTHORIZED,
@@ -113,7 +116,7 @@ fn verify_password(password: &str, hash: &str) -> Result<bool, (StatusCode, Json
     })
 }
 
-async fn is_username_taken(username: &str) -> Result<(), (StatusCode, Json<CommonError>)> {
+async fn is_username_taken(username: &str) -> Result<()> {
     let existing_user = auth_db::get_user(username).await.map_err(|e| {
         eprintln!("Database query error: {:?}", e);
         (
