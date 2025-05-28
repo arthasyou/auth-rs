@@ -1,6 +1,6 @@
-pub mod auth_db;
+pub mod auth;
 
-use auth_db::create_users_table;
+use auth::create_users_table;
 
 use crate::error::Result;
 

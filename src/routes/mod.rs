@@ -1,8 +1,8 @@
-mod auth_route;
+mod auth;
 
 use std::sync::Arc;
 
-use auth_route::{routes_auth, AuthApi};
+use auth::{routes_auth, AuthApi};
 use axum::{Extension, Router};
 use service_utils_rs::services::{http::middleware::cors::create_cors, jwt::Jwt};
 use utoipa::OpenApi;

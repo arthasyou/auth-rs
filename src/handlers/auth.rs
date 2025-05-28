@@ -11,9 +11,9 @@ use service_utils_rs::services::{
 };
 
 use crate::{
-    database::auth_db,
+    database::auth,
     error::error_code,
-    models::auth_model::{LoginRequest, LoginResponse, SignupRequest, User, UserInput},
+    models::auth::{LoginRequest, LoginResponse, SignupRequest, User, UserInput},
 };
 
 #[utoipa::path(
@@ -38,7 +38,7 @@ pub async fn signup(Json(payload): Json<SignupRequest>) -> ResponseResult<Empty>
 
     let user = UserInput::new(&payload.username, &hashed_password);
 
-    auth_db::create_user(user).await.map_err(|e| {
+    auth::create_user(user).await.map_err(|e| {
         eprintln!("Database query error: {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -83,7 +83,7 @@ pub async fn login(
 }
 
 async fn get_current_user(username: &str) -> Result<User> {
-    let existing_user = auth_db::get_user(username).await.map_err(|_| {
+    let existing_user = auth::get_user(username).await.map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(error_code::SERVER_ERROR.into()),
@@ -109,7 +109,7 @@ fn verify_password(password: &str, hash: &str) -> Result<()> {
 }
 
 async fn is_username_taken(username: &str) -> Result<()> {
-    let existing_user = auth_db::get_user(username).await.map_err(|e| {
+    let existing_user = auth::get_user(username).await.map_err(|e| {
         eprintln!("Database query error: {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,

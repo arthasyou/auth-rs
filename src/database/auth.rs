@@ -2,7 +2,7 @@ use service_utils_rs::services::db::get_db;
 
 use crate::{
     error::Result,
-    models::auth_model::{User, UserInput},
+    models::auth::{User, UserInput},
 };
 
 pub async fn create_users_table() -> Result<()> {
