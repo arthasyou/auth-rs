@@ -11,7 +11,7 @@ use crate::handlers::auth::{login, refresh_token, signup};
         crate::handlers::auth::refresh_token
     ),
     tags(
-        (name = "Auth", description = "登入相关接口")
+        (name = "Auth", description = "Authentication and Authorization APIs")
     ),
 )]
 pub struct AuthApi;

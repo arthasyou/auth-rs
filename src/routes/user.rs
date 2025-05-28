@@ -12,7 +12,7 @@ use crate::handlers::user::{logout, me};
 #[openapi(
     paths(crate::handlers::user::logout, crate::handlers::user::me),
     tags(
-        (name = "User", description = "用户相关接口")
+        (name = "User", description = "User Management APIs")
     ),
     // 不知道为什么这里的 security 会影响到全局
     // security(
