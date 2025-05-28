@@ -55,7 +55,7 @@ pub async fn signup(Json(payload): Json<SignupRequest>) -> ResponseResult<Empty>
     path = "/login",
     request_body = LoginRequest,
     responses(
-        (status = 200, description = "User registered successfully", body = LoginResponse),
+        (status = 200, description = "User registered successfully", body = CommonResponse<LoginResponse>),
         (status = 500, description = "Internal server error", body = CommonError)
     )
 )]
