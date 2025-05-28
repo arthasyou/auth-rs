@@ -22,6 +22,4 @@ async fn main() {
     http_server::start(settings.http.port, router)
         .await
         .unwrap();
-
-    // println!("Hello, world!");
 }
