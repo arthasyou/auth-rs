@@ -6,16 +6,25 @@ use crate::{
 };
 
 pub async fn create_users_table() -> Result<()> {
-    let query = "
-        DEFINE TABLE IF NOT EXISTS user SCHEMALESS PERMISSIONS FULL;
-    
-        DEFINE FIELD IF NOT EXISTS username ON TABLE user TYPE string;
-        DEFINE FIELD IF NOT EXISTS password ON TABLE user TYPE string;
-        DEFINE FIELD IF NOT EXISTS uuid ON TABLE user TYPE string;
-  
-        DEFINE INDEX IF NOT EXISTS unique_uuid ON TABLE user FIELDS uuid UNIQUE;
-        DEFINE INDEX IF NOT EXISTS unique_username ON TABLE user FIELDS username UNIQUE;
-       ";
+    let query = r#"
+        DEFINE TABLE IF NOT EXISTS users SCHEMALESS PERMISSIONS FULL;
+
+        DEFINE FIELD IF NOT EXISTS uuid ON TABLE users TYPE string READONLY;
+        DEFINE FIELD IF NOT EXISTS username ON TABLE users TYPE string READONLY;
+        DEFINE FIELD IF NOT EXISTS password ON TABLE users TYPE string;
+        DEFINE FIELD IF NOT EXISTS email ON TABLE users TYPE option<string>;
+        DEFINE FIELD IF NOT EXISTS email_verified ON TABLE users TYPE bool VALUE false;
+        DEFINE FIELD IF NOT EXISTS role ON TABLE users TYPE string;
+        DEFINE FIELD IF NOT EXISTS disabled ON TABLE users TYPE bool VALUE false;
+        DEFINE FIELD IF NOT EXISTS mfa_enabled ON TABLE users TYPE bool VALUE false;
+        DEFINE FIELD IF NOT EXISTS mfa_secret ON TABLE users TYPE option<string>;
+        DEFINE FIELD IF NOT EXISTS created_at ON TABLE users TYPE datetime VALUE time::now() READONLY;
+        DEFINE FIELD IF NOT EXISTS updated_at ON TABLE users TYPE datetime VALUE time::now();
+
+        DEFINE INDEX IF NOT EXISTS unique_uuid ON TABLE users FIELDS uuid UNIQUE;
+        DEFINE INDEX IF NOT EXISTS unique_username ON TABLE users FIELDS username UNIQUE;
+        DEFINE INDEX IF NOT EXISTS unique_email ON TABLE users FIELDS email UNIQUE;
+    "#;
 
     let db = get_db();
     db.query(query).await?;
@@ -24,14 +33,8 @@ pub async fn create_users_table() -> Result<()> {
 }
 
 pub async fn create_user(input: UserInput) -> Result<()> {
-    let uuid: String = uuid::Uuid::new_v4().to_string();
-    let user = User {
-        uuid,
-        username: input.username,
-        password: input.password,
-    };
     let db = get_db();
-    let _r: Option<User> = db.create(("user", &user.username)).content(user).await?;
+    let _r: Option<User> = db.create(("users", &input.username)).content(input).await?;
     Ok(())
 }
 

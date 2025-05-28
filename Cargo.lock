@@ -334,6 +334,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "bcrypt 0.17.0",
+ "chrono",
  "serde",
  "serde_json",
  "service_utils_rs",

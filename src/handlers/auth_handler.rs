@@ -36,10 +36,7 @@ pub async fn signup(Json(payload): Json<SignupRequest>) -> ResponseResult<Empty>
         )
     })?;
 
-    let user = UserInput {
-        username: payload.username,
-        password: hashed_password,
-    };
+    let user = UserInput::new(&payload.username, &hashed_password);
 
     auth_db::create_user(user).await.map_err(|e| {
         eprintln!("Database query error: {:?}", e);
@@ -84,7 +81,7 @@ pub async fn login(
     })?;
     let data = LoginResponse {
         access_token: accece,
-        refresh: refleash,
+        refresh_token: refleash,
     };
 
     let res = data.into_common_response().to_json();
