@@ -40,7 +40,7 @@ pub async fn create_user(input: UserInput) -> Result<()> {
 
 pub async fn get_user(username: &str) -> Result<Option<User>> {
     let db = get_db();
-    let r: Option<User> = db.select(("user", username)).await?;
+    let r: Option<User> = db.select(("users", username)).await?;
     println!("get user: {:?}", r);
     Ok(r)
 }

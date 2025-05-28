@@ -64,13 +64,7 @@ pub async fn login(
     Json(payload): Json<LoginRequest>,
 ) -> ResponseResult<LoginResponse> {
     let db_user = get_current_user(&payload.username).await?;
-    let is_valid = verify_password(&payload.password, db_user.password.as_ref())?;
-    if !is_valid {
-        return Err((
-            StatusCode::UNAUTHORIZED,
-            Json(error_code::SERVER_ERROR.into()),
-        ));
-    }
+    let _ = verify_password(&payload.password, db_user.password.as_ref())?;
 
     let user_id = db_user.uuid.clone().to_string();
     let (accece, refleash) = jwt.generate_token_pair(user_id.clone()).map_err(|_| {
@@ -104,13 +98,14 @@ async fn get_current_user(username: &str) -> Result<User> {
     }
 }
 
-fn verify_password(password: &str, hash: &str) -> Result<bool> {
-    bcrypt::verify(password, hash).map_err(|_err| {
-        (
+fn verify_password(password: &str, hash: &str) -> Result<()> {
+    match bcrypt::verify(password, hash) {
+        Ok(true) => Ok(()),
+        Ok(false) | Err(_) => Err((
             StatusCode::UNAUTHORIZED,
             Json(error_code::PASSWORD_ERROR.into()),
-        )
-    })
+        )),
+    }
 }
 
 async fn is_username_taken(username: &str) -> Result<()> {
