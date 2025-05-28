@@ -16,4 +16,3 @@ bcrypt = "0.17"
 uuid = { version = "1", features = ["v4", "fast-rng", "macro-diagnostics"] }
 utoipa = { version = "5", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "9", features = ["axum"] }
-utoipa-axum = { version = "0.2" }
