@@ -2,7 +2,7 @@ use service_utils_rs::services::db::get_db;
 
 use crate::{
     error::Result,
-    models::auth::{User, UserInput},
+    models::{User, UserInput},
 };
 
 pub async fn create_users_table() -> Result<()> {
@@ -34,13 +34,19 @@ pub async fn create_users_table() -> Result<()> {
 
 pub async fn create_user(input: UserInput) -> Result<()> {
     let db = get_db();
-    let _r: Option<User> = db.create(("users", &input.username)).content(input).await?;
+    let _r: Option<User> = db.create(("users", &input.uuid)).content(input).await?;
     Ok(())
 }
 
-pub async fn get_user(username: &str) -> Result<Option<User>> {
+pub async fn get_user_by_name(username: &str) -> Result<Option<User>> {
     let db = get_db();
-    let r: Option<User> = db.select(("users", username)).await?;
-    println!("get user: {:?}", r);
+    let query = format!("SELECT * FROM users WHERE username = '{}'", username);
+    let result: Option<User> = db.query(query).await?.take(0)?;
+    Ok(result)
+}
+
+pub async fn get_user_by_id(user_id: &str) -> Result<Option<User>> {
+    let db = get_db();
+    let r: Option<User> = db.select(("users", user_id)).await?;
     Ok(r)
 }
