@@ -34,7 +34,6 @@ pub async fn logout(Extension(_user_id): Extension<String>) -> ResponseResult<Em
     security(("Bearer" = [])),
 )]
 pub async fn me(Extension(user_id): Extension<String>) -> ResponseResult<MeResponse> {
-    println!("Fetching user with ID: {}", user_id);
     let user = user::get_user_by_id(&user_id).await.map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
