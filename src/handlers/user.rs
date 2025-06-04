@@ -1,5 +1,6 @@
 use axum::{http::StatusCode, Extension, Json};
 use service_utils_rs::services::http::{
+    middleware::auth_mw::UserId,
     response::{CommonOk, Empty, ResponseResult},
     CommonError, CommonResponse, IntoCommonResponse,
 };
@@ -17,7 +18,7 @@ use crate::{database::user, error::error_code, models::user::MeResponse};
     tag = "User",
     security(("Bearer" = [])),
 )]
-pub async fn logout(Extension(_user_id): Extension<String>) -> ResponseResult<Empty> {
+pub async fn logout(Extension(UserId(_user_id)): Extension<UserId>) -> ResponseResult<Empty> {
     let res = CommonOk::default().to_json();
     Ok(res)
 }
@@ -33,7 +34,7 @@ pub async fn logout(Extension(_user_id): Extension<String>) -> ResponseResult<Em
     tag = "User",
     security(("Bearer" = [])),
 )]
-pub async fn me(Extension(user_id): Extension<String>) -> ResponseResult<MeResponse> {
+pub async fn me(Extension(UserId(user_id)): Extension<UserId>) -> ResponseResult<MeResponse> {
     let user = user::get_user_by_id(&user_id).await.map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
