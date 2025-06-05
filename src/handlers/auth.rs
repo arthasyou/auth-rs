@@ -9,6 +9,7 @@ use service_utils_rs::services::{
     },
     jwt::Jwt,
 };
+use validator::Validate;
 
 use super::{get_current_user, is_username_taken, verify_password};
 use crate::{
@@ -34,6 +35,17 @@ use crate::{
     tag = "Auth",
 )]
 pub async fn signup(Json(payload): Json<SignupRequest>) -> ResponseResult<Empty> {
+    if let Err(validation_errors) = payload.validate() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            CommonError {
+                code: error_code::INVALID_PARAMS.0,
+                message: format!("{}", validation_errors),
+            }
+            .to_json(),
+        ));
+    }
+
     is_username_taken(&payload.username).await?;
 
     let hashed_password = hash(&payload.password, DEFAULT_COST).map_err(|_e| {
@@ -72,6 +84,17 @@ pub async fn login(
     Extension(jwt): Extension<Arc<Jwt>>,
     Json(payload): Json<LoginRequest>,
 ) -> ResponseResult<LoginResponse> {
+    if let Err(validation_errors) = payload.validate() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            CommonError {
+                code: error_code::INVALID_PARAMS.0,
+                message: validation_errors.to_string(),
+            }
+            .to_json(),
+        ));
+    }
+
     let db_user = get_current_user(&payload.username).await?;
     let _ = verify_password(&payload.password, db_user.password.as_ref())?;
 

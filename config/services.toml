@@ -16,4 +16,4 @@ namespace = "dev"
 database = "dev"
 
 [http]
-port = 9876
+port = 19876

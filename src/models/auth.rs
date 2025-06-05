@@ -2,16 +2,21 @@ use std::str;
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+use validator::Validate;
 
-#[derive(Deserialize, Debug, ToSchema)]
+#[derive(Deserialize, Debug, ToSchema, Validate)]
 pub struct SignupRequest {
+    #[validate(length(min = 3, max = 32))]
     pub username: String,
+    #[validate(length(min = 6, max = 128))]
     pub password: String,
 }
 
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, Validate)]
 pub struct LoginRequest {
+    #[validate(length(min = 3, max = 32))]
     pub username: String,
+    #[validate(length(min = 6, max = 128))]
     pub password: String,
 }
 

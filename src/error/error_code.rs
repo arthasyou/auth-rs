@@ -14,6 +14,7 @@ macro_rules! status_error_codes {
 
 status_error_codes! {
     (-1, SERVER_ERROR, "server error");
+    (-2, INVALID_PARAMS, "invalid params");
     (-10, USER_EXIST, "user exist");
     (-11, USER_NOT_EXIST, "user not exist");
     (-12, PASSWORD_ERROR, "password error");
