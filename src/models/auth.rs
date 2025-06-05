@@ -8,7 +8,7 @@ use validator::Validate;
 pub struct SignupRequest {
     #[validate(length(min = 3, max = 32))]
     pub username: String,
-    #[validate(length(min = 6, max = 128))]
+    #[validate(length(min = 1, max = 128))]
     pub password: String,
 }
 
@@ -16,7 +16,7 @@ pub struct SignupRequest {
 pub struct LoginRequest {
     #[validate(length(min = 3, max = 32))]
     pub username: String,
-    #[validate(length(min = 6, max = 128))]
+    #[validate(length(min = 1, max = 128))]
     pub password: String,
 }
 
