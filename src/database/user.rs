@@ -40,8 +40,12 @@ pub async fn create_user(input: UserInput) -> Result<()> {
 
 pub async fn get_user_by_name(username: &str) -> Result<Option<User>> {
     let db = get_db();
-    let query = format!("SELECT * FROM users WHERE username = '{}'", username);
-    let result: Option<User> = db.query(query).await?.take(0)?;
+    let query = "SELECT * FROM users WHERE username = $username";
+    let result: Option<User> = db
+        .query(query)
+        .bind(("username", username.to_string()))
+        .await?
+        .take(0)?;
     Ok(result)
 }
 

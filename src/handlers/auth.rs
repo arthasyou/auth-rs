@@ -99,15 +99,15 @@ pub async fn login(
     let _ = verify_password(&payload.password, db_user.password.as_ref())?;
 
     let user_id = db_user.uuid.clone().to_string();
-    let (accece, refleash) = jwt.generate_token_pair(user_id.clone()).map_err(|_| {
+    let (access, refresh) = jwt.generate_token_pair(user_id).map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(error_code::SERVER_ERROR.into()),
         )
     })?;
     let data = LoginResponse {
-        access_token: accece,
-        refresh_token: refleash,
+        access_token: access,
+        refresh_token: refresh,
     };
 
     let res = data.into_common_response().to_json();
